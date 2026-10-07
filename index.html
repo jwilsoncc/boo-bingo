@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Boo Bingo Cauldron</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Creepster&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: a witch's cauldron stage on the left draws hold scenarios; the HOLDS board on the right lights up what has been called; a trainer key opens below. Single dark "night" theme by choice. */
+:root{
+  --night:#15111d; --night2:#1f1830; --panel:#241c36; --line:#3a2f52;
+  --text:#f1ecf8; --muted:#b7aacb;
+  --pumpkin:#f39a3a; --potion:#7de0c4; --potionDeep:#2f8f7c; --ember:#ff6a3d;
+  --iron:#0d0b12; --ironHi:#3b3448; --flag:#ffd479;
+  --display:"Creepster", "Chiller", fantasy;
+  --body:"Atkinson Hyperlegible", system-ui, sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{margin:0;background:radial-gradient(1200px 600px at 20% 0%, #2a1f40 0%, var(--night) 60%) fixed, var(--night);color:var(--text);font:16px/1.5 var(--body);padding-inline:16px;padding-block:20px 40px}
+.wrap{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+h1{font:400 clamp(44px,7vw,76px)/.9 var(--display);margin:0;color:var(--pumpkin);letter-spacing:.02em;text-shadow:0 0 24px rgba(243,154,58,.35)}
+.sub{font-weight:700;color:var(--potion);text-transform:uppercase;letter-spacing:.14em;font-size:13px;margin-top:6px}
+.flag{border:1px dashed var(--flag);color:var(--flag);background:rgba(255,212,121,.07);border-radius:10px;padding:8px 12px;font-size:13px;max-width:440px}
+.flag b{display:block;letter-spacing:.06em;text-transform:uppercase;font-size:12px}
+.main{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:18px}
+@media (max-width:900px){.main{grid-template-columns:1fr}}
+
+/* Stage */
+.stage{background:linear-gradient(180deg,var(--night2),var(--panel));border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:14px;min-width:0;position:relative;overflow:hidden}
+.pot{position:relative;width:100%;max-width:360px;margin:0 auto;aspect-ratio:300/270}
+.pot svg{width:100%;height:100%;display:block;overflow:visible}
+.bubbles{position:absolute;left:18%;right:18%;top:22%;height:2px;pointer-events:none}
+.bub{position:absolute;bottom:0;border-radius:50%;background:radial-gradient(circle at 35% 35%,#d9fff3,var(--potion) 55%,var(--potionDeep));opacity:.85;animation:rise var(--d,2.4s) ease-in forwards}
+@keyframes rise{from{transform:translateY(0) scale(.6);opacity:.9}to{transform:translateY(-120px) scale(1.1);opacity:0}}
+.flame{transform-origin:150px 262px;animation:flick 0.9s ease-in-out infinite alternate}
+.flame.f2{animation-duration:1.2s}
+@keyframes flick{from{transform:scaleY(.85) skewX(-4deg)}to{transform:scaleY(1.08) skewX(4deg)}}
+.surface{transition:filter .4s}
+.spoon{transform-origin:150px 92px;transition:transform .3s}
+.stirring .spoon{animation:stir .55s linear infinite}
+@keyframes stir{0%{transform:translateX(-26px) rotate(-10deg)}50%{transform:translateX(26px) rotate(10deg)}100%{transform:translateX(-26px) rotate(-10deg)}}
+.stirring .surface{filter:brightness(1.5) drop-shadow(0 0 18px var(--potion))}
+.glow{opacity:.35;transition:opacity .4s}
+.stirring .glow{opacity:.9}
+
+.ball{position:absolute;left:50%;top:2%;width:34%;aspect-ratio:1;max-width:120px;border-radius:50%;transform:translate(-50%,0);display:grid;place-items:center;text-align:center;background:radial-gradient(circle at 32% 30%,#fff7e9,#ffd29a 30%,var(--pumpkin) 62%,#b4581a);box-shadow:0 0 30px rgba(243,154,58,.6),inset -8px -10px 18px rgba(0,0,0,.25);color:#2a1606}
+.ball[hidden]{display:none!important}
+.ball .letter{font:400 clamp(22px,4vw,34px)/1 var(--display)}
+.ball .num{font:600 clamp(14px,2.2vw,18px)/1.3 var(--mono)}
+.ball.pop{animation:emerge 1s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes emerge{from{transform:translate(-50%,120%) scale(.2);opacity:0}to{transform:translate(-50%,0) scale(1);opacity:1}}
+
+.controls{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+button{font:700 15px var(--body);border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--text);padding:10px 16px;cursor:pointer}
+button:hover{border-color:var(--muted)}
+button:focus-visible{outline:3px solid var(--potion);outline-offset:2px}
+button:disabled{opacity:.45;cursor:not-allowed}
+.stir{background:linear-gradient(180deg,#ffb35e,var(--pumpkin));color:#2a1606;border:0;font-size:18px;padding:14px 30px;box-shadow:0 6px 24px rgba(243,154,58,.35)}
+.stir:hover{filter:brightness(1.06)}
+
+.call{background:rgba(13,11,18,.55);border:1px solid var(--line);border-radius:14px;padding:14px 16px;min-height:118px}
+.call .eyebrow{font:600 12px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.call .square{font:700 clamp(20px,2.6vw,26px)/1.2 var(--body);color:var(--pumpkin);margin:6px 0 4px;text-wrap:balance}
+.call .script{font-size:clamp(19px,2.1vw,24px);line-height:1.4;margin:6px 0 0;max-width:62ch}
+.reveal{margin-top:12px;display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.reveal .square{margin:0}
+.count{font:600 13px var(--mono);color:var(--potion)}
+
+/* Board */
+.board{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px;min-width:0}
+.board h2,.key h2{font:400 28px/1 var(--display);color:var(--potion);margin:0 0 10px;letter-spacing:.03em}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+@media (max-width:560px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.colhead{text-align:center;font:400 clamp(30px,4vw,44px)/1 var(--display);color:var(--pumpkin)}
+.coltag{text-align:center;font-size:11px;color:var(--muted);line-height:1.2;min-height:2.4em}
+.cell{all:unset;box-sizing:border-box;border:1px solid var(--line);border-radius:10px;background:rgba(13,11,18,.45);padding:8px 10px;min-height:54px;justify-content:center;display:flex;flex-direction:column;gap:3px;cursor:default;color:var(--muted);transition:background .3s,border-color .3s,color .3s}
+.cell .c{font:600 12px var(--mono);color:var(--muted)}
+.cell .t{font-size:clamp(13px,1.2vw,15px);line-height:1.25;overflow-wrap:anywhere}
+.cell.called{background:linear-gradient(180deg,rgba(125,224,196,.22),rgba(47,143,124,.25));border-color:var(--potion);color:var(--text);cursor:pointer}
+.cell.called .c{color:var(--potion)}
+.cell.latest{box-shadow:0 0 0 2px var(--pumpkin),0 0 22px rgba(243,154,58,.5)}
+.cell.called:focus-visible{outline:3px solid var(--pumpkin);outline-offset:2px}
+.cell.free{background:radial-gradient(circle at 50% 40%,rgba(243,154,58,.35),rgba(13,11,18,.4));border-color:var(--pumpkin);align-items:center;justify-content:center;color:var(--pumpkin)}
+.cell.free .t{font:400 26px/1 var(--display)}
+.legend{margin-top:10px;font-size:13px;color:var(--muted)}
+
+/* Trainer key */
+.keybar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.key{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px}
+.keybody{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:12px}
+@media (max-width:900px){.keybody{grid-template-columns:1fr}}
+.kbox{background:rgba(13,11,18,.45);border:1px solid var(--line);border-radius:12px;padding:12px 14px;min-width:0}
+.kbox h3{margin:0 0 6px;font:600 12px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--potion)}
+.kbox ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
+.kwhy{grid-column:1/-1;border-color:var(--pumpkin)}
+.kwhy h3{color:var(--pumpkin)}
+.kwhy p{margin:0;max-width:90ch}
+.kverify{grid-column:1/-1;border:1px dashed var(--flag);background:rgba(255,212,121,.06)}
+.kverify h3{color:var(--flag)}
+.kverify p{margin:0}
+.empty{color:var(--muted);margin:10px 0 0}
+.toggle[aria-pressed="true"]{background:var(--potionDeep);border-color:var(--potion)}
+.small{font-size:13px;color:var(--muted)}
+footer{font-size:13px;color:var(--muted);max-width:90ch}
+
+@media (prefers-reduced-motion:reduce){
+  .flame,.stirring .spoon,.ball.pop,.bub{animation:none!important}
+  .bubbles{display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Boo Bingo</h1>
+      <div class="sub">Services on Hold &middot; Care Coordinator Training</div>
+    </div>
+    <div class="flag" role="note"><b>Draft for review</b>These hold scenarios and answer key were drafted for training. A supervisor or compliance reviewer must confirm them against company policy before use.</div>
+  </header>
+
+  <section class="main">
+    <div class="stage" id="stage">
+      <div class="pot" aria-hidden="true">
+        <div class="bubbles" id="bubbles"></div>
+        <svg viewBox="0 0 300 270">
+          <defs>
+            <radialGradient id="potionG" cx="50%" cy="45%" r="60%">
+              <stop offset="0" stop-color="#c8ffee"/>
+              <stop offset=".45" stop-color="#7de0c4"/>
+              <stop offset="1" stop-color="#1f6f5f"/>
+            </radialGradient>
+            <linearGradient id="ironG" x1="0" x2="1">
+              <stop offset="0" stop-color="#0d0b12"/>
+              <stop offset=".35" stop-color="#3b3448"/>
+              <stop offset=".6" stop-color="#1b1724"/>
+              <stop offset="1" stop-color="#0d0b12"/>
+            </linearGradient>
+            <radialGradient id="glowG" cx="50%" cy="50%" r="50%">
+              <stop offset="0" stop-color="#7de0c4" stop-opacity=".9"/>
+              <stop offset="1" stop-color="#7de0c4" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <ellipse class="glow" cx="150" cy="80" rx="140" ry="60" fill="url(#glowG)"/>
+          <!-- fire -->
+          <g>
+            <path class="flame" d="M95 262 C100 225 125 230 120 200 C140 222 150 205 150 185 C165 210 178 214 180 198 C190 222 205 228 205 262 Z" fill="#ff6a3d"/>
+            <path class="flame f2" d="M115 262 C120 236 138 238 136 218 C150 232 156 222 158 210 C168 228 182 232 185 262 Z" fill="#ffc15e"/>
+          </g>
+          <!-- legs -->
+          <path d="M78 205 L62 250 L76 250 L94 212 Z" fill="#0d0b12"/>
+          <path d="M222 205 L238 250 L224 250 L206 212 Z" fill="#0d0b12"/>
+          <!-- body -->
+          <path d="M42 92 C30 160 70 222 150 224 C230 222 270 160 258 92 Z" fill="url(#ironG)"/>
+          <path d="M70 120 C72 160 92 190 118 202" stroke="#5a5070" stroke-width="5" fill="none" stroke-linecap="round" opacity=".55"/>
+          <!-- rim -->
+          <ellipse cx="150" cy="92" rx="116" ry="26" fill="#0d0b12"/>
+          <ellipse cx="150" cy="90" rx="110" ry="22" fill="#3b3448"/>
+          <ellipse class="surface" cx="150" cy="93" rx="98" ry="16" fill="url(#potionG)"/>
+          <!-- spoon -->
+          <g class="spoon">
+            <rect x="146" y="8" width="9" height="92" rx="4" fill="#8a5a33" transform="rotate(14 150 92)"/>
+            <ellipse cx="150" cy="96" rx="14" ry="6" fill="#6e4426"/>
+          </g>
+          <!-- handles -->
+          <circle cx="36" cy="104" r="11" fill="none" stroke="#0d0b12" stroke-width="6"/>
+          <circle cx="264" cy="104" r="11" fill="none" stroke="#0d0b12" stroke-width="6"/>
+        </svg>
+        <div class="ball" id="ball" hidden><div><div class="letter">Boo!</div><div class="num" id="ballNum">#1</div></div></div>
+      </div>
+
+      <div class="controls">
+        <button class="stir" id="stirBtn" type="button">Stir the Cauldron</button>
+        <button id="undoBtn" type="button">Undo last call</button>
+        <button id="resetBtn" type="button">New game</button>
+      </div>
+
+      <div class="call" aria-live="polite" id="call">
+        <div class="eyebrow"><span id="callCode">Ready when you are</span><span class="count" id="count">0 of 24 called</span></div>
+        <p class="script" id="callScript">Stir the cauldron to call the first scenario. Read it aloud, and players decide which hold reason it matches. If that reason is on their card, they mark it.</p>
+        <div class="reveal">
+          <button id="revealBtn" type="button" hidden>Reveal the hold reason</button>
+          <div class="square" id="callSquare" hidden></div>
+        </div>
+      </div>
+      <div class="small" id="confirmReset" hidden></div>
+    </div>
+
+    <div class="board">
+      <h2>Hold Reasons Word Bank</h2>
+      <p class="small" style="margin:0 0 10px">Before the game, each player picks any 9 hold reasons from this list and writes them in the blank squares of their card. Every card ends up different.</p>
+      <div class="grid" id="grid"></div>
+      <div class="legend">A reason lights up once its scenario has been called and revealed. Tap a lit reason to open its trainer key.</div>
+    </div>
+  </section>
+
+  <section class="key">
+    <div class="keybar">
+      <h2 style="margin:0">Trainer Answer Key</h2>
+      <button class="toggle" id="keyToggle" type="button" aria-pressed="false" aria-controls="keyPanel">Show trainer key</button>
+    </div>
+    <p class="small" style="margin:6px 0 0">Hidden by default so players on the projector cannot see the answers. Open it after you reveal the hold reason and have asked the room: why is this a hold, and what are your next steps?</p>
+    <div id="keyPanel" hidden></div>
+  </section>
+
+  <footer>All scenarios are fictional. No real member names or identifying information are used. Every timeframe, form name, and system step must follow your company procedures; where this key says "confirm with company policy," get the answer from your supervisor or compliance lead before training.</footer>
+</div>
+
+<script>
+const COLS = {
+  H:"Hospital and health stays",
+  O:"Out of the home",
+  L:"Life choices and eligibility",
+  D:"Danger at the home",
+  S:"Service and provider changes"
+};
+const BASE_DOC = ["Date you learned of the change and who told you","Date services stopped and every provider you notified, with date and time","Expected return or resume date, if known","Your planned follow up contact date"];
+
+const S = [
+ {c:"H1",sq:"Hospital admission",call:"A member's daughter calls. Her mother was admitted to the hospital last night after a fall at home.",
+  why:"The member is receiving care in an inpatient setting, so in home waiver services cannot be delivered while she is there.",
+  do:["Confirm the facility, admission date, and reason with the caller or hospital","Notify every active provider to stop services","Place services on hold following company procedure","Ask about expected discharge and discharge plans","Plan a check in before discharge to see if needs have changed"],
+  doc:["Hospital name and admission date","Who reported the admission",...BASE_DOC.slice(1)],
+  esc:["The fall involved a possible incident that requires reporting","The member may not return home or needs a new level of care","The stay goes past the hold limit set by company policy"],
+  verify:"Maximum hold length before reassessment or discharge, and the incident reporting rule for falls."},
+ {c:"H2",sq:"Planned surgery",call:"A member tells you he is scheduled for knee surgery next Tuesday and expects to stay in the hospital afterward.",
+  why:"A planned inpatient stay means services will be paused for a known period, which lets you prepare providers ahead of time.",
+  do:["Confirm surgery date, facility, and expected length of stay","Give providers advance notice of the hold start date","Discuss what support he may need after discharge","Set a reminder to call on the expected discharge date"],
+  doc:["Planned surgery date and facility","Advance notice given to each provider",...BASE_DOC.slice(2)],
+  esc:["Recovery needs may exceed his current service plan","The plan changes to a nursing facility or rehab stay"],
+  verify:"Whether a planned hold is entered in advance or on the admission date."},
+ {c:"H3",sq:"Nursing facility rehab stay",call:"After a hospital stay, a member is moved to a nursing facility for short term rehab instead of going home.",
+  why:"The member is in an institutional setting, so waiver services stay on hold until she returns home.",
+  do:["Confirm the nursing facility name and transfer date","Keep services on hold and update providers","Contact the facility social worker about the discharge plan","Check whether the member still plans to return home"],
+  doc:["Facility name and transfer date","Contact with facility staff and discharge plan details",...BASE_DOC.slice(1)],
+  esc:["The stay becomes long term placement","The stay approaches the hold limit in company policy","The member or family is unsure about returning home"],
+  verify:"Hold limit for nursing facility stays and when the case must be discharged or reassessed."},
+ {c:"H4",sq:"Inpatient behavioral health stay",call:"A provider reports the member was admitted to a behavioral health unit for inpatient care.",
+  why:"The member is receiving inpatient care, so in home services are paused during the stay.",
+  do:["Confirm the admission with the member's representative or facility","Notify providers and place services on hold","Respect privacy; share only what each provider needs","Plan contact near discharge to review safety and supports"],
+  doc:["Facility and admission date, recorded factually","Minimum necessary details only",...BASE_DOC.slice(1)],
+  esc:["Any concern about the member's safety or the safety of others","The home situation may not be safe for return"],
+  verify:"Privacy rules for behavioral health information and who may be told about the admission."},
+ {c:"H5",sq:"Inpatient rehab hospital",call:"A member who had a stroke is transferred from the hospital to an inpatient rehabilitation hospital for therapy.",
+  why:"A transfer between inpatient settings continues the hold. The member's needs may be very different at discharge.",
+  do:["Update the hold with the new facility and transfer date","Keep providers informed that the hold continues","Ask the rehab team about expected functional changes","Prepare for a possible reassessment before services resume"],
+  doc:["Transfer date and new facility","Updates from the rehab team",...BASE_DOC.slice(1)],
+  esc:["Needs at discharge are likely to change the care plan","The combined stay reaches the hold limit"],
+  verify:"Whether a hold that crosses facilities counts as one continuous hold."},
+
+ {c:"O1",sq:"Out of state travel",call:"A member is going to spend three weeks with her sister in Alabama.",
+  why:"Georgia waiver services are delivered in Georgia. While she is out of state, services are placed on hold.",
+  do:["Confirm leave date, return date, and a contact number while away","Notify providers of the hold dates","Make sure she has a plan for her needs while traveling","Call after the return date to resume services"],
+  doc:["Travel dates and where she will be staying","Phone number while away",...BASE_DOC.slice(1)],
+  esc:["She extends the trip past the time allowed by company policy","She decides to move out of state"],
+  verify:"How long a member may be out of state before the case must close."},
+ {c:"O2",sq:"Staying with family in Georgia",call:"A member will stay with his son in another Georgia county while his bathroom is remodeled.",
+  why:"Ask first whether services can safely follow him. If providers cannot serve the temporary address, services go on hold.",
+  do:["Get the temporary address and dates","Ask providers if they can serve the temporary location","If not, place affected services on hold","Confirm his return date and resume plan"],
+  doc:["Temporary address and dates","Each provider's answer about serving the location","Which services continued and which were held",...BASE_DOC.slice(2)],
+  esc:["The stay becomes a permanent move to another area","Unsure whether the temporary address is in your service area"],
+  verify:"Rules for serving a member at a temporary address in Georgia."},
+ {c:"O3",sq:"Displaced by fire or flood",call:"A kitchen fire made a member's home unlivable. She is staying at a hotel arranged by a relief agency.",
+  why:"Services cannot be delivered in a home that is not livable. The member also needs urgent help finding safe housing.",
+  do:["Confirm she is safe and where she is staying","Place services on hold and notify providers","Connect her with housing and relief resources","Check medications, equipment, and personal emergency response needs"],
+  doc:["Event date and current location","Safety check and resources offered",...BASE_DOC.slice(1)],
+  esc:["Right away, if she has no safe place to stay","Lost medications or medical equipment","Possible critical incident reporting"],
+  verify:"Critical incident definition and reporting timeframe for disasters."},
+ {c:"O4",sq:"Caregiver emergency",call:"A member's main caregiver was hospitalized, so the member is staying with a cousin out of the area for now.",
+  why:"The member is away from the home where services are delivered, and her support system has changed.",
+  do:["Confirm where she is, who is caring for her, and for how long","Place services on hold if they cannot follow her","Review the backup plan and update it","Plan to reassess supports when she returns"],
+  doc:["Temporary caregiver and location","Backup plan changes",...BASE_DOC.slice(1)],
+  esc:["No safe caregiver is available","Concern about neglect or exploitation"],
+  verify:"How to update the backup plan and who must approve changes."},
+ {c:"O5",sq:"Unable to locate member",call:"The aide arrived twice this week and no one answered. The member's phone goes straight to voicemail.",
+  why:"Services cannot be delivered, and an unreachable member may be in danger. Safety comes before paperwork.",
+  do:["Call every contact on file, including the representative","Check with hospitals if your procedure allows","Request a welfare check if you cannot confirm safety","Place services on hold once you know why they cannot be delivered"],
+  doc:["Every attempt: date, time, number called, result","Welfare check request and outcome",...BASE_DOC.slice(1)],
+  esc:["Right away to your supervisor","Whenever you cannot confirm the member is safe"],
+  verify:"Required number of contact attempts and when to request a welfare check."},
+
+ {c:"L1",sq:"Member asks for a pause",call:"A member says her grandchildren are visiting for two weeks and she does not want the aide coming during that time.",
+  why:"Members have the right to make choices about their services. A temporary pause at the member's request is a hold.",
+  do:["Confirm the start and end dates of the pause","Make sure her needs will still be met by family","Notify providers of the dates","Call before the end date to confirm services restart"],
+  doc:["Her request in her own words","Who will meet her needs during the pause",...BASE_DOC.slice(1)],
+  esc:["The pause keeps extending","You are concerned her needs will not be met"],
+  verify:"Whether a member request hold needs a signed form or written statement."},
+ {c:"L2",sq:"Member refuses services",call:"A member tells the provider to stop coming because he is upset about a schedule change.",
+  why:"The refusal may be temporary. Your job is to understand the reason and try to solve it before services lapse.",
+  do:["Call the member to understand the concern","Work with the provider on the schedule","Explain risks of going without services","Hold services if he still refuses, with a follow up date"],
+  doc:["His reason in his own words","Options offered and his response",...BASE_DOC.slice(1)],
+  esc:["He is at risk without services","The refusal continues past company limits","Possible provider issue or complaint"],
+  verify:"Steps and time limits when a member refuses services."},
+ {c:"L3",sq:"Medicaid eligibility issue",call:"During a monthly review, you notice the member's Medicaid eligibility shows as ended, pending renewal.",
+  why:"Waiver services require active Medicaid eligibility. A lapse can affect whether services can be authorized.",
+  do:["Verify eligibility in the approved system","Contact the member about the renewal paperwork","Offer help with the renewal","Follow company procedure for services during the lapse"],
+  doc:["Date eligibility issue found and how verified","Help offered with renewal",...BASE_DOC.slice(1)],
+  esc:["Right away to your supervisor for direction","If the member cannot complete renewal alone"],
+  verify:"Whether services are held, continued, or closed during an eligibility lapse."},
+ {c:"L4",sq:"Cost share not paid",call:"A provider reports the member has not paid the required cost share for two months.",
+  why:"Unpaid cost share can put services at risk. Look for the reason before any service change.",
+  do:["Talk with the member about the reason","Check for income or expense changes","Work with the provider on a plan","Follow company procedure before any hold"],
+  doc:["Provider report and months unpaid","Member's explanation and plan",...BASE_DOC.slice(3)],
+  esc:["Signs of financial exploitation","Provider plans to stop services"],
+  verify:"Company and program rules for unpaid cost share. Confirm before using this square."},
+
+ {c:"D1",sq:"Unsafe pet",call:"The aide reports an aggressive dog that is not secured and lunged at her at the door.",
+  why:"Providers cannot work in a home where staff are at risk. Services may pause until the hazard is fixed.",
+  do:["Talk with the member about securing the pet during visits","Agree on a plan with the provider","Hold services only if the risk is not fixed","Restart once the provider confirms it is safe"],
+  doc:["Provider report and date","Safety plan agreed with the member",...BASE_DOC.slice(1)],
+  esc:["A staff member was injured","The member will not agree to a safety plan"],
+  verify:"Who decides when a home is unsafe for staff."},
+ {c:"D2",sq:"Threats to staff",call:"A household member yelled threats at the aide and told her not to come back.",
+  why:"Staff safety comes first. Services pause while you address the threat.",
+  do:["Make sure the aide is safe","Contact the member to check on her safety too","Place services on hold","Plan next steps with your supervisor"],
+  doc:["Exactly what was reported, in factual terms","Who was present and the date",...BASE_DOC.slice(1)],
+  esc:["Right away to your supervisor","Concern about the member's own safety, abuse, or neglect","Any threat of violence"],
+  verify:"Required reporting for threats and possible abuse or neglect."},
+ {c:"D3",sq:"Pest infestation",call:"The provider reports a severe bed bug infestation and staff cannot safely work in the home.",
+  why:"Severe infestation can stop in home services until treatment is done.",
+  do:["Talk with the member about treatment options","Connect her with resources for pest control","Place affected services on hold","Restart services once treatment is confirmed"],
+  doc:["Provider report and date","Resources offered",...BASE_DOC.slice(1)],
+  esc:["The member has no way to pay for treatment","The home is unsafe to live in"],
+  verify:"Local resources and any provider standards for infested homes."},
+ {c:"D4",sq:"No power or water",call:"A member's electricity was shut off and the home has no heat or lights.",
+  why:"A home without utilities may be unsafe for the member and for staff. This is a safety issue first.",
+  do:["Confirm the member is safe today","Connect with utility assistance or emergency resources","Hold services only if they cannot be delivered","Check medical equipment that needs power"],
+  doc:["Date utilities were lost","Safety check and resources offered",...BASE_DOC.slice(1)],
+  esc:["Right away if the member relies on powered medical equipment","Extreme heat or cold","No safe place to stay"],
+  verify:"Emergency steps for members who rely on powered equipment."},
+ {c:"D5",sq:"Unsafe home conditions",call:"The aide reports a strong smell of gas and a ceiling that looks ready to collapse.",
+  why:"Immediate hazards put the member and staff at risk. Safety action comes before any service decision.",
+  do:["Make sure emergency services or the gas company are called","Confirm the member is safe","Hold services until the home is safe","Help with repairs or temporary housing resources"],
+  doc:["Hazard reported and actions taken","Who was contacted and when",...BASE_DOC.slice(1)],
+  esc:["Right away to your supervisor","Possible critical incident"],
+  verify:"Critical incident reporting rules for home hazards."},
+
+ {c:"S1",sq:"Adult day health center closed",call:"The member's adult day health center will close for a week because of a water main break.",
+  why:"The service cannot be delivered while the center is closed. The member may still need support on those days.",
+  do:["Confirm closure dates with the center","Check if the member is safe at home on those days","Arrange other supports if needed","Confirm the center reopens and attendance resumes"],
+  doc:["Closure dates and reason","Plan for the member during closure",...BASE_DOC.slice(2)],
+  esc:["The member cannot be safely left alone","Closure goes on longer than expected"],
+  verify:"Whether a provider closure is entered as a hold or handled another way."},
+ {c:"S2",sq:"Severe weather",call:"A winter storm means aides and meal drivers cannot travel in the county for two days.",
+  why:"Services cannot be delivered safely. Your focus is on making sure members have what they need.",
+  do:["Contact high risk members first","Confirm backup plans are in place","Coordinate with providers on make up visits","Check in again after the storm"],
+  doc:["Event dates and services missed","Members contacted and backup plans used"],
+  esc:["A member has no food, heat, or support","A member cannot be reached"],
+  verify:"Whether missed visits from weather are recorded as a hold. Confirm before using this square."},
+ {c:"S3",sq:"Duplicate service",call:"After discharge, a member gets home health aide visits that cover the same bathing tasks as the waiver aide.",
+  why:"Two services should not pay for the same task at the same time. The waiver service may be adjusted or held while the other service is active.",
+  do:["Find out the home health start date, tasks, and end date","Compare tasks with the waiver care plan","Adjust or hold the overlapping waiver service","Restart when home health ends"],
+  doc:["Home health agency, tasks, and dates","Changes made to the waiver service",...BASE_DOC.slice(1)],
+  esc:["You are unsure if the services overlap","The member's needs are not fully covered"],
+  verify:"Rules for coordinating waiver services with home health."},
+ {c:"S4",sq:"Alternative living member hospitalized",call:"A member who lives in an alternative living services home is admitted to the hospital.",
+  why:"While the member is inpatient, the alternative living service is not being delivered. Bed hold rules may apply.",
+  do:["Confirm the admission with the home and hospital","Notify the provider and place the service on hold","Ask about the provider's bed hold arrangement","Confirm the member can return at discharge"],
+  doc:["Admission date and hospital","Bed hold arrangement, if any",...BASE_DOC.slice(1)],
+  esc:["The home will not take the member back","Needs at discharge are higher than the home can meet"],
+  verify:"Bed hold and absence rules for alternative living services (open item in our records)."},
+ {c:"S5",sq:"Emergency room observation stay",call:"A member went to the emergency room and is being kept for observation for a couple of days.",
+  why:"An observation stay can pause services even when the member is not formally admitted.",
+  do:["Confirm whether the member is in observation or admitted","Notify providers that services are paused","Ask about the expected release","Check in after release"],
+  doc:["Observation start date and facility",...BASE_DOC.slice(1)],
+  esc:["The stay turns into an admission","The member returns home with new needs"],
+  verify:"Whether an observation stay is treated the same as an admission for holds."}
+];
+
+const byCode = Object.fromEntries(S.map(s=>[s.c,s]));
+let called = [];
+let showKey = false;
+let keyCode = null;
+let busy = false;
+let revealed = [];
+
+try{ const saved = JSON.parse(localStorage.getItem("booBingoState")||"{}"); if(Array.isArray(saved.called)) called = saved.called.filter(c=>byCode[c]); if(Array.isArray(saved.revealed)) revealed = saved.revealed.filter(c=>called.includes(c)); }catch(e){}
+function save(){ try{ localStorage.setItem("booBingoState", JSON.stringify({called,revealed})); }catch(e){} }
+
+const $ = id=>document.getElementById(id);
+const esc = s=>String(s).replace(/[&<>"]/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
+
+function buildGrid(){
+  const g = $("grid"); let h="";
+  [...S].sort((x,y)=>x.sq.localeCompare(y.sq)).forEach(sc=>{
+    h+=`<button class="cell" type="button" data-code="${sc.c}"><span class="t">${esc(sc.sq)}</span></button>`;
+  });
+  g.innerHTML = h;
+  g.addEventListener("click",e=>{
+    const b = e.target.closest(".cell[data-code]");
+    if(!b || !revealed.includes(b.dataset.code)) return;
+    keyCode = b.dataset.code; renderKey();
+    if(!showKey) $("keyToggle").click();
+  });
+}
+
+function render(){
+  const last = called[called.length-1];
+  document.querySelectorAll(".cell[data-code]").forEach(c=>{
+    const on = revealed.includes(c.dataset.code);
+    c.classList.toggle("called",on);
+    c.classList.toggle("latest",on && c.dataset.code===last);
+    c.tabIndex = on?0:-1;
+  });
+  $("count").textContent = `${called.length} of ${S.length} called`;
+  $("stirBtn").disabled = called.length>=S.length || busy;
+  $("undoBtn").disabled = !called.length || busy;
+  if(last){
+    const s = byCode[last];
+    const shown = revealed.includes(last);
+    $("callCode").textContent = `Scenario ${called.length}`;
+    $("callScript").textContent = `"${s.call}"`;
+    $("revealBtn").hidden = shown;
+    $("callSquare").hidden = !shown;
+    $("callSquare").textContent = shown ? `Hold reason: ${s.sq}` : "";
+    $("ball").hidden=false; $("ballNum").textContent="#"+called.length;
+  } else {
+    $("callCode").textContent="Ready when you are";
+    $("callSquare").hidden=true; $("revealBtn").hidden=true;
+    $("callScript").textContent="Stir the cauldron to call the first scenario. Read it aloud, and players decide which hold reason it matches. If that reason is on their card, they mark it.";
+    $("ball").hidden=true;
+  }
+  if(called.length>=S.length){ $("callCode").textContent += " · Cauldron is empty"; }
+  if(!keyCode || !called.includes(keyCode)) keyCode = last||null;
+  renderKey();
+}
+
+function renderKey(){
+  const p = $("keyPanel");
+  if(!keyCode){ p.innerHTML = `<p class="empty">No scenario called yet. The key for each call appears here.</p>`; return; }
+  const s = byCode[keyCode];
+  const li = a=>a.map(x=>`<li>${esc(x)}</li>`).join("");
+  p.innerHTML = `
+    <div class="keybody">
+      <div class="kbox kwhy"><h3>${esc(s.sq)} · Why this is a hold</h3><p>${esc(s.why)}</p></div>
+      <div class="kbox"><h3>What to Do</h3><ul>${li(s.do)}</ul></div>
+      <div class="kbox"><h3>What to Document</h3><ul>${li(s.doc)}</ul></div>
+      <div class="kbox"><h3>When to Escalate</h3><ul>${li(s.esc)}</ul></div>
+      <div class="kbox kverify"><h3>Confirm with company policy</h3><p>${esc(s.verify)}</p></div>
+    </div>`;
+}
+
+function spawnBubbles(n,fast){
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const box = $("bubbles");
+  for(let i=0;i<n;i++){
+    const b = document.createElement("span"); b.className="bub";
+    const sz = 6+Math.random()*16;
+    b.style.width=b.style.height=sz+"px";
+    b.style.left=(Math.random()*100)+"%";
+    b.style.setProperty("--d",(fast?1+Math.random():2+Math.random()*1.5)+"s");
+    b.style.animationDelay=(Math.random()*(fast?0.8:0.3))+"s";
+    box.appendChild(b);
+    b.addEventListener("animationend",()=>b.remove());
+  }
+}
+setInterval(()=>{ if(!document.hidden) spawnBubbles(2,false); },900);
+
+function stir(){
+  if(busy) return;
+  const left = S.filter(s=>!called.includes(s.c));
+  if(!left.length) return;
+  busy=true; render();
+  const stage=$("stage"); stage.classList.add("stirring");
+  spawnBubbles(26,true);
+  $("ball").hidden=true;
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  setTimeout(()=>{
+    stage.classList.remove("stirring");
+    const pick = left[Math.floor(Math.random()*left.length)];
+    called.push(pick.c); keyCode=pick.c; save();
+    busy=false; render();
+    const ball=$("ball"); ball.classList.remove("pop"); void ball.offsetWidth; ball.classList.add("pop");
+  }, reduce?150:1700);
+}
+
+let resetArmed=false;
+$("stirBtn").addEventListener("click",stir);
+$("undoBtn").addEventListener("click",()=>{ const x=called.pop(); revealed=revealed.filter(c=>c!==x); keyCode=null; save(); render(); });
+$("revealBtn").addEventListener("click",()=>{ const last=called[called.length-1]; if(last && !revealed.includes(last)){ revealed.push(last); save(); render(); } });
+$("resetBtn").addEventListener("click",()=>{
+  if(!called.length) return;
+  if(!resetArmed){ resetArmed=true; $("resetBtn").textContent="Tap again to clear the board"; setTimeout(()=>{resetArmed=false;$("resetBtn").textContent="New game";},3500); return; }
+  resetArmed=false; $("resetBtn").textContent="New game";
+  called=[]; revealed=[]; keyCode=null; save(); render();
+});
+$("keyToggle").addEventListener("click",()=>{
+  showKey=!showKey;
+  $("keyPanel").hidden=!showKey;
+  $("keyToggle").setAttribute("aria-pressed",showKey);
+  $("keyToggle").textContent = showKey?"Hide trainer key":"Show trainer key";
+});
+
+buildGrid(); render();
+window.claude?.hot?.snapshot?.(()=>({called,revealed}));
+</script>
+</body>
+</html>
