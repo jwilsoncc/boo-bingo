@@ -96,7 +96,7 @@ footer{color:var(--muted);font-size:.85rem;max-width:760px;margin-top:22px}
     </div>
 
     <div class="call" aria-live="polite">
-      <div class="call-head"><span id="stateLabel">READY WHEN YOU ARE</span><span class="count" id="count">0 OF 15 CALLED</span></div>
+      <div class="call-head"><span id="stateLabel">READY WHEN YOU ARE</span><span class="count" id="count">0 OF 16 CALLED</span></div>
       <p class="scenario" id="scenario">Stir the cauldron to call the first scenario. Read it aloud, and players mark the hold reason it matches if it is on their card.</p>
       <div class="revealed" id="revealBox" hidden>
         <div class="tag">Hold reason</div>
@@ -120,35 +120,37 @@ footer{color:var(--muted);font-size:.85rem;max-width:760px;margin-top:22px}
    `scenario` is read aloud by the trainer. */
 const HOLDS = [
   { reason:"Children living in home of SFC caregiver",
-    scenario:"During a home visit, a care coordinator learns that several children now live full-time in the home of the member's SFC caregiver. This was not known before." },
+    scenario:"CC learns several children now live in the SFC caregiver's home." },
   { reason:"Member's LOC has expired",
-    scenario:"A member's level of care determination ran out last week, and there is no renewal on file." },
+    scenario:"Member's level of care ended last week. No renewal on file." },
   { reason:"Member requested hold",
-    scenario:"A member calls and says they do not want any services right now and asks their care coordinator to put everything on hold." },
+    scenario:"Member calls and asks to put all services on hold." },
   { reason:"Member has provider concerns",
-    scenario:"A member tells their care coordinator that their provider shows up late, leaves early, and makes them uncomfortable. They want services paused until it is sorted out." },
+    scenario:"Member says the provider is often late and makes them uncomfortable." },
   { reason:"Member is hard to reach",
-    scenario:"A care coordinator has called, texted, and mailed a letter to a member over three weeks and has not received any response." },
+    scenario:"CC called, texted, and mailed for three weeks. No response." },
   { reason:"Moving from PSSX to SFC (or vice versa)",
-    scenario:"A member's services are changing from PSSX to SFC, and the change has not been finalized, so the current service has to pause." },
+    scenario:"Member is switching from PSSX to SFC, and the change isn't finalized." },
   { reason:"Member missing or refusing home visit",
-    scenario:"A care coordinator goes to the home for a scheduled visit and no one answers. Later the member says they do not want anyone coming to the house." },
+    scenario:"No one answers at the home visit, and the member says to stop coming." },
   { reason:"Member was admitted to the hospital",
-    scenario:"A family member calls to say the member was admitted to the hospital last night and is expected to stay several days." },
+    scenario:"Family says the member was admitted to the hospital last night." },
   { reason:"Member's caregiver has not reported for work",
-    scenario:"A member's caregiver has not shown up for scheduled shifts for several days, and no one is providing the member's care." },
+    scenario:"Caregiver hasn't shown up for shifts in days. No one is providing care." },
   { reason:"Member's Medicaid is inactive",
-    scenario:"While checking eligibility, a care coordinator sees that a member's Medicaid shows as inactive as of the first of the month." },
+    scenario:"CC sees the member's Medicaid is inactive as of the first." },
   { reason:"Member missed several scheduled visits",
-    scenario:"A member has missed three scheduled visits in a row and has given no reason." },
+    scenario:"Member missed three scheduled visits in a row, with no reason." },
   { reason:"Provider is unable to contact member",
-    scenario:"A provider reports that they have gone to the member's door and called many times, and no one answers." },
+    scenario:"Provider went to the door and called many times. No answer." },
   { reason:"Member is traveling (international or out of state)",
-    scenario:"A member tells their care coordinator they are going to visit relatives overseas for two months." },
+    scenario:"Member is going overseas to visit relatives for two months." },
   { reason:"CC observed safety concerns",
-    scenario:"During a home visit, a care coordinator sees something that makes them worry about the safety of the member or the caregiver." },
+    scenario:"At a home visit, CC sees something unsafe for the member or caregiver." },
   { reason:"Member is in jail",
-    scenario:"A care coordinator learns from the member's family that the member was arrested and is being held in jail." }
+    scenario:"Family says the member was arrested and is in jail." },
+  { reason:"Change of address",
+    scenario:"Member reports a move, but two different addresses are on file." }
 ];
 
 const $ = id => document.getElementById(id);
